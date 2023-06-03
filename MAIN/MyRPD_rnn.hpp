@@ -2,7 +2,7 @@
 #include <ctime>
 #include <cstdlib>
 #include <stdio.h>
-#include<io.h>
+// #include<io.h>
 #include <stdlib.h>
 #include<iostream>
 #include<string>
@@ -34,7 +34,6 @@ typedef Tree::Point_and_primitive_id Point_and_primitive_id;
 
 using namespace std;
 using namespace nanoflann;
-
 
 
 class DisjSet
@@ -77,16 +76,10 @@ vector<string> files;
 void Comput_rnn(string modelpath,string modelname)
 {
 
-
+	string outputPath = "./";
 	string filePath = modelpath;
 	string ss;
-
 	{
-		//string modelname;
-
-		//modelname = files[filenum];
-		//modelname = "0.005_50000_00040123_8fc7d06caf264003a242597a_trimesh_000";
-	
 		vector<Eigen::Vector3d> VersPC_ori;
 		vector<string> models;
 
@@ -98,19 +91,12 @@ void Comput_rnn(string modelpath,string modelname)
 		cout << modelname << "\n";
 		//continue;
 
-
-
-
-
-		//string modelname = "cube";
 		string model_num = "FinalPointCloud1_"+ modelname;
 		string file = filePath;
-		//string file = filePath+"Result_abc_0004\\" + modelname + "\\";
 		string filen = file + "knn50_"+ modelname +".txt";
-		string filenNew = file + "knn50_qc_" + modelname + ".txt";
-		string filenPoisson = file + "knn50_poisson_" + modelname + ".txt";
+		string filenNew = outputPath + "knn50_qc_" + modelname + ".txt";
+		string filenPoisson = outputPath + "knn50_poisson_" + modelname + ".txt";
 
-		//ofstream outknn(filen);
 		ofstream outknnNew(filenNew);
 		ofstream outknnPoisson(filenPoisson);
 		MyPointCloudModel PCmodel;
@@ -130,42 +116,22 @@ void Comput_rnn(string modelpath,string modelname)
 
 		MyHalfEdgeModel* PoissonModel = new MyHalfEdgeModel();
 		PoissonModel->ReadObjFile((file + "model_poisson_" + modelname + ".obj").c_str());
-		
-		/*ofstream outOFF(file + "model_poisson.off");
-		outOFF << "OFF\n";
-		outOFF << PoissonModel->GetVertices().size() << " " << PoissonModel->GetFaces().size() << " 0\n";
-		for (auto p : PoissonModel->GetVertices())
-		{
-			outOFF << p.x() << " " << p.y() << " " << p.z() << "\n";
-		}
-		for(auto f: PoissonModel->GetFaces())
-		{
-			outOFF << "3 " << f.x() << " " << f.y() << " " << f.z() << "\n";
-		}outOFF.close();*/
-
-
-
 
 
 		Polyhedron polyhedron;
 		std::ifstream input(file + "model_poisson_" + modelname + ".off");
-
 
 		cout << "Read point cloud.\n";
 
 		VersPC_ori = PCmodel.GetVertices();
 		int n = VersPC_ori.size();
 
-
 		input >> polyhedron;
-		//CGAL::
-
-		//MyAABBTree* MyTree = new MyAABBTree("data\\cube_poisson.off");
 		Tree tree(faces(polyhedron).first, faces(polyhedron).second, polyhedron);
 		vector<Eigen::Vector3d> VersPC;
-		ofstream outFnum(file + "FeaturePointNum_" + modelname + ".txt");
-		ofstream outNps(file + "PoissonPoints_qc_" + modelname + ".xyz");
-		ofstream outNpsori(file + "OriPoints_qc_" + modelname + ".xyz");
+		ofstream outFnum(outputPath + "FeaturePointNum_" + modelname + ".txt");
+		ofstream outNps(outputPath + "PoissonPoints_qc_" + modelname + ".xyz");
+		ofstream outNpsori(outputPath + "OriPoints_qc_" + modelname + ".xyz");
 		outNps.precision(15);
 		outNps.flags(ios::left | ios::fixed);
 		outNps.fill('0');
@@ -174,25 +140,14 @@ void Comput_rnn(string modelpath,string modelname)
 		outNpsori.fill('0');
 
 		int fnum = 0;
-
-
-
-
-
 		for (int i = 0; i < n; i++)
 		{
 			Point_T query(VersPC_ori[i].x(), VersPC_ori[i].y(), VersPC_ori[i].z());
 			Point_T closest = tree.closest_point(query);
 			Eigen::Vector3d NewP(closest.x(), closest.y(), closest.z());
 			VersPC.push_back(VersPC_ori[i]);
-			//VersPC.push_back(NewP);
-
-
 		}
-		//continue;
 		PointCloud<double> cloud;
-
-
 
 		string c;
 		n = 0;
@@ -202,7 +157,6 @@ void Comput_rnn(string modelpath,string modelname)
 			cloud.pts[i].x = VersPC[i].x();
 			cloud.pts[i].y = VersPC[i].y();
 			cloud.pts[i].z = VersPC[i].z();
-
 			n++;
 			if (n % 10000 == 0)
 			{
@@ -232,25 +186,15 @@ void Comput_rnn(string modelpath,string modelname)
 			double query_pt[3] = { VersPC[i].x(), VersPC[i].y(), VersPC[i].z() };
 
 			const double search_radius = static_cast<double>((radis) * (radis));
-			//const double search_radius = static_cast<double>((0.015) * (0.015));
-			std::vector<std::pair<uint32_t, double> >   ret_matches;
+			std::vector<std::pair<uint32_t, double> > ret_matches;
 
 			nanoflann::SearchParams params;
-			//params.sorted = false;
-
 			const size_t nMatches = index.radiusSearch(&query_pt[0], search_radius, ret_matches, params);
 
-			//cout << "radiusSearch(): radius=" << search_radius << " -> " << nMatches << " matches\n";
-			//outknn << nMatches << " ";
 			for (size_t j = 0; j < nMatches; j++)
 			{
-				//outknn << ret_matches[j].first << " ";
-				//if((VersPC[i] = VersPC[ret_matches[j].first]).norm()>0.01)
-				//cout << (VersPC[i] - VersPC[ret_matches[j].first]).norm() << endl;
 				neighboor[i].push_back(ret_matches[j].first);
 			}
-			//cout << "idx[" << i << "]=" << ret_matches[i].first << " dist[" << i << "]=" << ret_matches[i].second << endl;
-			//outknn << "\n";
 		}
 
 		int N = n;
@@ -258,12 +202,9 @@ void Comput_rnn(string modelpath,string modelname)
 		for (int i = 0; i < N; i++)
 		{
 			Repeat.push_back(i);
-			//f[i] = i;
-
 		}
 		for (int i = 0; i < FeatureN; i++)
 		{
-
 			for (auto pp : neighboor[i])
 			{
 				//if (Repeat[pp] == pp)
@@ -280,7 +221,6 @@ void Comput_rnn(string modelpath,string modelname)
 						//Repeat[pp] = Repeat[i];
 					}
 				}
-
 			}
 		}
 		vector<Eigen::Vector3d> MargedPoints_Ori;
@@ -291,10 +231,7 @@ void Comput_rnn(string modelpath,string modelname)
 		map<int, vector<int>> cluster;
 		for (int i = 0; i < N; i++)
 		{
-			//if (bcj.find(i) != i)
-			//{
 			cluster[bcj.find(i)].push_back(i);
-			//}
 		}
 		for (auto mp : cluster)
 		{
@@ -320,53 +257,19 @@ void Comput_rnn(string modelpath,string modelname)
 				MargedPoints.push_back(VersPC[tp]);
 
 				isFeature.push_back(tp);
-
-
-				//Repeat[tp] = -1;
 			}
 		}
 		auto Nors = PCmodel.GetNormals();
 
-		/*for (int ii = 0; ii < N; ii++)
-		{
-
-			if (Repeat[ii] != ii)
-				continue;
-
-			if (ii < FeatureN)
-			{
-				fnum++;
-			}
-
-			outNps << VersPC[ii].transpose() << endl;
-			outNpsori << VersPC_ori[ii].transpose() << " " << Nors[ii].transpose() << endl;
-
-		}*/
 		for (int ii = 0; ii < MargedPoints.size(); ii++)
 		{
-
-			/*if (isFeature[ii] == 1)
-			{
-				outNps << MargedPoints[ii].transpose()<<" 1.0 0.1 0.1" << endl;
-				outNpsori << MargedPoints_Ori[ii].transpose() << " 1.0 0.1 0.1" << endl;
-			}
-			else
-			{
-				outNps << MargedPoints[ii].transpose() << " 0.0 0.1 0.1" << endl;
-				outNpsori << MargedPoints_Ori[ii].transpose() << " 0.0 0.1 0.1"  << endl;
-			}*/
-
 			outNps << MargedPoints[ii].transpose() << endl;
 			outNpsori << MargedPoints_Ori[ii].transpose() << " " << Nors[isFeature[ii]].transpose() << endl;
 			if (isFeature[ii] < FeatureN)
 				outFnum << 1 << endl;
 			else
 				outFnum << 0 << endl;
-
-
 		}
-
-
 		outFnum.close();
 
 		cout << "Qu Chong done.\n";
@@ -389,7 +292,6 @@ void Comput_rnn(string modelpath,string modelname)
 		}
 		cout << n << endl;
 
-
 		my_kd_tree_t   index2(3 /*dim*/, cloud, KDTreeSingleIndexAdaptorParams(10 /* max leaf */));
 		index2.buildIndex();
 		n = MargedPoints.size();
@@ -402,9 +304,7 @@ void Comput_rnn(string modelpath,string modelname)
 				cout << "part1: " << i << endl;
 			}
 
-
 			double query_pt[3] = { MargedPoints[i].x(), MargedPoints[i].y(), MargedPoints[i].z() };
-
 			const double search_radius = static_cast<double>((0.025) * (0.025));
 			std::vector<std::pair<uint32_t, double> >   ret_matches;
 
@@ -418,7 +318,6 @@ void Comput_rnn(string modelpath,string modelname)
 			for (size_t j = 0; j < nMatches; j++)
 			{
 				outknnNew << ret_matches[j].first << " ";
-
 			}
 			maxk = max(maxk, int(nMatches));
 			mink = min(mink, int(nMatches));
@@ -455,12 +354,10 @@ void Comput_rnn(string modelpath,string modelname)
 				cout << "part1: " << i << endl;
 			}
 
-
 			double query_pt[3] = { MargedPoints[i].x(), MargedPoints[i].y(), MargedPoints[i].z() };
 
 			const double search_radius = static_cast<double>((radis * 1.4) * (radis * 1.4));
-			//const double search_radius = static_cast<double>((0.018) * (0.018));
-			std::vector<std::pair<uint32_t, double> >   ret_matches;
+			std::vector<std::pair<uint32_t, double> > ret_matches;
 
 			nanoflann::SearchParams params;
 			//params.sorted = false;
@@ -474,7 +371,6 @@ void Comput_rnn(string modelpath,string modelname)
 			for (size_t j = 0; j < nMatches; j++)
 			{
 				outknnPoisson << ret_matches[j].first << " ";
-
 			}
 			maxk = max(maxk, int(nMatches));
 			mink = min(mink, int(nMatches));
@@ -483,21 +379,5 @@ void Comput_rnn(string modelpath,string modelname)
 		}
 
 		cout << "max : " << maxk << " min £º" << mink << endl;
-
 	}
-
-
-
-
-
-
-
-
-
-
-
-
-
-	
-
 }

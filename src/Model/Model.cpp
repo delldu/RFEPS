@@ -61,7 +61,7 @@ namespace BGAL
   }
   _Model::_Model(const std::string &in_file_name)
   {
-    int folder_loc = in_file_name.rfind("\\") > in_file_name.rfind("/") ? in_file_name.rfind("\\") : in_file_name.rfind("/");
+    int folder_loc = in_file_name.rfind("/") > in_file_name.rfind("/") ? in_file_name.rfind("/") : in_file_name.rfind("/");
     int dot_loc = in_file_name.rfind('.');
     _name = in_file_name.substr(folder_loc + 1, dot_loc - folder_loc - 1);
     read_file_(in_file_name);
@@ -88,7 +88,7 @@ namespace BGAL
   void _Model::save_obj_file_(const std::string &in_file_name) const
   {
     std::ofstream out(in_file_name);
-    int folder_loc = in_file_name.rfind("\\") > in_file_name.rfind("/") ? in_file_name.rfind("\\") : in_file_name.rfind("/");
+    int folder_loc = in_file_name.rfind("/") > in_file_name.rfind("/") ? in_file_name.rfind("/") : in_file_name.rfind("/");
     int dot_loc = in_file_name.rfind('.');
     out << "g "
         << in_file_name.substr(folder_loc + 1, dot_loc - folder_loc - 1)
@@ -111,7 +111,7 @@ namespace BGAL
   void _Model::save_scalar_field_obj_file_(const std::string &in_file_name, const std::vector<double> &vals) const
   {
     std::ofstream out(in_file_name);
-    int folder_loc = in_file_name.rfind("\\") > in_file_name.rfind("/") ? in_file_name.rfind("\\") : in_file_name.rfind("/");
+    int folder_loc = in_file_name.rfind("/") > in_file_name.rfind("/") ? in_file_name.rfind("/") : in_file_name.rfind("/");
     int dot_loc = in_file_name.rfind('.');
     out << "g " << in_file_name.substr(folder_loc + 1, dot_loc - folder_loc - 1) << std::endl;
     out << "# max value: " << *std::max_element(vals.begin(), vals.end()) << std::endl;
@@ -141,7 +141,7 @@ namespace BGAL
                                               const std::vector<std::pair<double, double>> &uvs) const
   {
     std::ofstream out(in_file_name);
-    int folder_loc = in_file_name.rfind("\\") > in_file_name.rfind("/") ? in_file_name.rfind("\\") : in_file_name.rfind("/");
+    int folder_loc = in_file_name.rfind("/") > in_file_name.rfind("/") ? in_file_name.rfind("/") : in_file_name.rfind("/");
     int dot_loc = in_file_name.rfind('.');
     out << "g " << in_file_name.substr(folder_loc + 1, dot_loc - folder_loc - 1) << std::endl;
     out << "mtllib chessboard.mtl" << std::endl;

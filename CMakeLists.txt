@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.17)
-set(CMAKE_TOOLCHAIN_FILE C:/dev/vcpkg/scripts/buildsystems/vcpkg.cmake)
+# set(CMAKE_TOOLCHAIN_FILE C:/dev/vcpkg/scripts/buildsystems/vcpkg.cmake)
 project(RFEPS)
 
 
@@ -24,6 +24,14 @@ if (Eigen3_FOUND)
     message(STATUS "${EIGEN3_VERSION_STRING}")
     include_directories(${EIGEN3_INCLUDE_DIR})
 endif ()
+
+find_package(OpenMP)
+if (OPENMP_FOUND)
+    message("OPENMP FOUND")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+endif()
+
 
 # Get Boost
 find_package(Boost REQUIRED)

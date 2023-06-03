@@ -49,12 +49,10 @@ typedef CGAL::Regular_triangulation_3<K_P>               Rt;
 using namespace std;
 
 //vector<int> Repeat;
-double gamma = 0.00000000001;
+#define gamma 0.00000000001
 
 double FeatureWeight = 0.015, noFeatureWeight = 0.005;
 //double FeatureWeight = 0.03, noFeatureWeight = 0.01;
-
-
 
 
 struct MyPoint
@@ -75,9 +73,6 @@ struct MyPoint
 
     bool operator<(const MyPoint& a) const
     {
-
-
-
         double dis = (p - a.p).norm();
         if (dis < gamma)
         {
@@ -145,12 +140,6 @@ struct MyFace
 
 int nowP = 0;
 
-
-
-//for power d
-
-
-
 vector<Regular_triangulation::Weighted_point> wpoints;
 vector<Point_P> points;
 vector<double> X, Y, Z;
@@ -166,11 +155,10 @@ void add_point(double x, double y, double z, double w) {
 
 void Comput_RPD(string modelpath,string modelName)
 {
-
+    string outputPath = "./";
 
     vector<string> files;
 
-    //string filePath = "E:\\Dropbox\\SIG-2022-Feature-preserving-recon\\data\\Result_100models\\";
     string ss;
    
     {
@@ -194,33 +182,23 @@ void Comput_RPD(string modelpath,string modelName)
         map<int, set<MyPoint>> RVDpoints;
 
 
-
-        //74488
-        //string filePath = "data\\";
         string filePath = modelpath;
-        //string filePath = "D:\\SIG-BigExps\\00040123_8fc7d06caf264003a242597a_trimesh_000\\rsmall\\";
-       // string modelName = "lucy";
-        //string modelName = files[filenum];
+
         MyHalfEdgeModel* PoissonModel = new MyHalfEdgeModel();
-        PoissonModel->ReadObjFile((filePath + "\\model_poisson_"+ modelName +".obj").c_str());
+        PoissonModel->ReadObjFile((filePath + "/model_poisson_"+ modelName +".obj").c_str());
         double radis = 0;
-        ifstream inRnum(filePath  + "\\radis_" + modelName + ".txt");
+        ifstream inRnum(filePath  + "/radis_" + modelName + ".txt");
         inRnum >> radis;
         inRnum.close();
         cout << radis << endl;
-        //radis = 0.0025;
 
         FeatureWeight = radis*1.0;
         noFeatureWeight = radis / 3.0;
-        //MyPointCloudModel PCmodel;
-        //PCmodel.ReadXYZFile(("data\\" + modelName + "\\fandisk50000_6883.xyz").c_str(), true);
+        ifstream inFnum(filePath  + "/FeaturePointNum_" + modelName + ".txt");
 
-        //PCmodel.WriteXYZFile("data\\outtest.xyz", true);
-        //VersPC_ori = PCmodel.GetVertices();
-        ifstream inFnum(filePath  + "\\FeaturePointNum_" + modelName + ".txt");
+        ifstream inNewPs(filePath  + "/PoissonPoints_qc_" + modelName + ".xyz");
+        ifstream inOriPs(filePath  + "/OriPoints_qc_" + modelName + ".xyz");
 
-        ifstream inNewPs(filePath  + "\\PoissonPoints_qc_" + modelName + ".xyz");
-        ifstream inOriPs(filePath  + "\\OriPoints_qc_" + modelName + ".xyz");
         int n = 0;
         double x11, y11, z11;
         while (inNewPs >> x11 >> y11 >> z11)
@@ -251,17 +229,10 @@ void Comput_RPD(string modelpath,string modelName)
         map<MyPoint, int> Point2ID;
         vector<vector<int>> neighboor;
 
-        //Knn KnnPC(filePath + modelName + "\\knn50_qc.txt", n, 50, true);
-        Knn KnnPoisson(filePath + "\\knn50_poisson_" + modelName + ".txt", n, 50, false);
+        Knn KnnPoisson(filePath + "/knn50_poisson_" + modelName + ".txt", n, 50, false);
         cout << "Read Knn.\n";
         cout << n << endl;
 
-
-
-
-
-		
-        // filePath = "E:\\Dropbox\\SIG-2022-Feature-preserving-recon\\data\\ToRander\\";
         for (int i = 0; i < n; i++)
         {
 
@@ -269,7 +240,6 @@ void Comput_RPD(string modelpath,string modelName)
             {
                 add_point(VersPC[i].x(), VersPC[i].y(), VersPC[i].z(), FeatureWeight * FeatureWeight);
                 Weight.push_back(FeatureWeight);
-
             }
             else
             {
@@ -289,7 +259,6 @@ void Comput_RPD(string modelpath,string modelName)
         }
 
         for (const Rt::Vertex_handle vh : rt.finite_vertex_handles()) {
-
             std::vector<Rt::Vertex_handle> f_vertices;
 
             rt.finite_adjacent_vertices(vh, std::back_inserter(f_vertices));
@@ -301,77 +270,13 @@ void Comput_RPD(string modelpath,string modelName)
                     cout << "ERROR!~\n\n\n";
                 }
                 nb_tmps.push_back(Point2ID[MyPoint(nb->point().x(), nb->point().y(), nb->point().z())]);
-                //out_P << "v " << nb->point().x() << " " << nb->point().y() << " " << nb->point().z() << "\n";
             }
             if (Point2ID.find(MyPoint(vh->point().x(), vh->point().y(), vh->point().z())) == Point2ID.end())
             {
                 cout << "ERROR!~\n\n\n";
             }
             neighboor[Point2ID[MyPoint(vh->point().x(), vh->point().y(), vh->point().z())]] = nb_tmps;
-            /*if (Point2ID.find(MyPoint(vh->point().x(), vh->point().y(), vh->point().z())) == Point2ID.end())
-            {
-                cout << "ERROR!~\n\n\n";
-            }*/
-
         }
-
-
-        //Polyhedron polyhedron;
-        //std::ifstream input("data\\" + modelName + "\\fandisk_poisson2.off");
-        //input >> polyhedron;
-        ////MyAABBTree* MyTree = new MyAABBTree("data\\cube_poisson.off");
-        //Tree tree(faces(polyhedron).first, faces(polyhedron).second, polyhedron);
-
-
-
-
-
-        /*int deletecnt = 0;
-        for (int i = 0; i < n; i++)
-            Repeat.push_back(-1);
-
-        for (int i = 0; i < n; i++)
-        {
-            if (KnnPC.neighboor[i].size() < 1)
-            {
-                Repeat[i] = 1; deletecnt++;
-            }
-        }
-        cout << n - deletecnt << endl;*/
-        //Repeat[42291] = 1;
-        /*for (int i = 0; i < n; i++)
-        {
-            if (Repeat[i] != -1)
-                continue;
-
-            for (auto p : KnnPC.neighboor[i])
-            {
-                if (Repeat[p] == -1)
-                {
-                    double dis = (VersPC[i] - VersPC[p]).norm();
-                    if (dis <= 0.001)
-                    {
-                        Repeat[p] = i;
-                    }
-                }
-
-            }
-        }
-
-        for (int i = 0; i < n; i++)
-        {
-            for (auto p : KnnPC.neighboor[i])
-            {
-                if (Weight[i] == FeatureWeight && Weight[p] == noFeatureWeight)
-                {
-                    double dis = (VersPC[p] - VersPC[i]).norm();
-                    if (dis <= 0.001)
-                    {
-                        Repeat[p] = i;
-                    }
-                }
-            }
-        }*/
 
 
         auto VersPoisson = PoissonModel->GetVertices();
@@ -379,16 +284,11 @@ void Comput_RPD(string modelpath,string modelName)
         cout << "Read Poisson model.\n";
 
         //#pragma omp parallel for schedule(dynamic,20)
-        ofstream outPts(filePath  + "\\CenterPoints_" + modelName + ".xyz");
+        ofstream outPts(outputPath + "/CenterPoints_" + modelName + ".xyz");
 
         outPts.precision(15);
         outPts.flags(ios::left | ios::fixed);
         outPts.fill('0');
-
-
-
-
-
 
 
         int OpenmpCnt = 0;
@@ -396,15 +296,6 @@ void Comput_RPD(string modelpath,string modelName)
 #pragma omp parallel for //schedule(dynamic, 20)
         for (int ii = 0; ii < n; ii++)
         {
-            // if (ii == 7)
-                 //continue;
-
-            /* if (Repeat[ii] != -1)
-             {
-
-                 continue;
-             }*/
-
             OpenmpCnt++;
             if (OpenmpCnt % 10000 == 0)
             {
@@ -415,21 +306,12 @@ void Comput_RPD(string modelpath,string modelName)
 
 
             PlaneCut* PC = new PlaneCut(VersPC[ii]);
-            //ofstream out("data\\knn.xyz");
-            //ofstream outf("data\\insideFaces.obj");
-            //cout << ii << endl;
-            /*Point_T query(VersPC[i].x(), VersPC[i].y(), VersPC[i].z());
-            Point_T closest = tree.closest_point(query);
-            Eigen::Vector3d NewP(closest.x(), closest.y(), closest.z());*/
-            // out << VersPC[i].transpose() << endl;
             nowP = ii;
-            //sort(KnnPC.neighboor[ii].begin(), KnnPC.neighboor[ii].end(),cmp);
 
             map<int, int> opposide;
             map<MyPoint, vector<int>> point2edge;
             // 把knn倒过来，应该会好。
 
-            //for (auto p : KnnPC.neighboor[ii])
             int planeNum = 0;
 
             //for (int jj = KnnPC.neighboor[ii].size() - 1; jj >= 0; jj--)
@@ -437,32 +319,15 @@ void Comput_RPD(string modelpath,string modelName)
             {
                 //cout << " " << jj << " ";
                 auto p = neighboor[ii][jj];
-                /*if (Repeat[p] != -1)
-                    continue;*/
-                if (!IsFeature[p] && IsFeature[ii])
-                {
-                    //continue;
-                }
-
-
-                //cout << (VersPC[p] - VersPC[ii]).norm() << "\n";
-                //cout << p << endl;
-                // out << VersPC[p].transpose() << endl;
 
                 auto aa = VersPC[ii];
                 auto bb = VersPC[p];
                 auto r1 = Weight[ii], r2 = Weight[p];
 
-                //Eigen::Vector3d MidPoint = VersPC[ii] + (VersPC[p] - VersPC[ii])*(Weight[ii]/(Weight[ii]+Weight[p]));  //voronoi
                 Eigen::Vector3d MidPoint;
                 double lambda = ((r1 * r1 - r2 * r2) / ((bb - aa).norm() * (bb - aa).norm()) + 1.0) / 2.0;
                 MidPoint = (1 - lambda) * aa + lambda * bb;
 
-                /*MidPoint.x() = (r1 * r1 - r2 * r2 + bb.x() * bb.x() - aa.x() * aa.x()) / (2 * bb.x() - 2 * aa.x());
-                MidPoint.y() = (r1 * r1 - r2 * r2 + bb.y() * bb.y() - aa.y() * aa.y()) / (2 * bb.y() - 2 * aa.y());
-                MidPoint.z() = (r1 * r1 - r2 * r2 + bb.z() * bb.z() - aa.z() * aa.z()) / (2 * bb.z() - 2 * aa.z());*///power 
-
-                //out << MidPoint.transpose() << endl;
                 K::Point_3 point1(MidPoint.x(), MidPoint.y(), MidPoint.z());
                 MidPoint = VersPC[p] - VersPC[ii];
 
@@ -472,34 +337,19 @@ void Comput_RPD(string modelpath,string modelName)
                 Plane plane(point1, dir);
                 bool ifcut = PC->CutByPlane(plane);
 
-
                 if (ifcut)
                 {
-
-
                     opposide[planeNum] = p; planeNum++;
-                    //Recon[make_pair(min(p, ii), max(p, ii))] = 1;
                 }
                 if (IsFeature[ii] && ifcut)
                 {
                     linefix[make_pair(ii, p)] = 1;
                 }
-
-
-                /*if (ii == 317)
-                {
-                    string file = filePath + modelName + "\\debug\\" + to_string(jj) + "BigCube.obj";
-                    PC->CuttedMesh->WriteObjFile(file.c_str());
-                }*/
-
             }
             PCs[ii] = PC;
-            //continue;
-            //cout << endl;
             vector<bool> FlagPlane;
             for (int pl = 0; pl < PC->Planes.size(); pl++)
             {
-
                 if (FlagOf2Points.find(make_pair(min(ii, opposide[pl]), max(ii, opposide[pl]))) == FlagOf2Points.end())
                 {
                     FlagOf2Points[make_pair(min(ii, opposide[pl]), max(ii, opposide[pl]))] = true;
@@ -509,14 +359,7 @@ void Comput_RPD(string modelpath,string modelName)
                 {
                     FlagPlane.push_back(0);
                 }
-
             }
-
-
-
-
-
-
 
             set<int> CloseFaces;
             for (auto p : KnnPoisson.neighboor[ii])
@@ -528,23 +371,15 @@ void Comput_RPD(string modelpath,string modelName)
                 }
             }
 
-
-
-
-           
-
-
             vector<int> insideF;
             vector<vector<Eigen::Vector3d>> CuttedF;
             vector<bool> aliveF;
 
             map<MyPoint, int> PointType;
-            //vector<int> cuttedFp;
             for (auto f : CloseFaces)
             {
 
                 bool cuted = 0;
-                //cout << f << endl;
                 int insidePoints = 0;
                 auto P1 = VersPoisson[FacesPoisson[f].x()];
                 auto P2 = VersPoisson[FacesPoisson[f].y()];
@@ -587,23 +422,15 @@ void Comput_RPD(string modelpath,string modelName)
                     if ((f1 > 0 && f2 < 0) || (f1 < 0 && f2 > 0))
                     {
                         cuted = 1;
-                        //cuttedFp.push_back(opposide[plane]);
-                        //Recon[make_pair(min(ii, opposide[pl]), max(ii, opposide[pl]))] = 1;
-                        //break;
                     }
                     if ((f2 > 0 && f3 < 0) || (f2 < 0 && f3 > 0))
                     {
                         cuted = 1; //cuttedFp.push_back(opposide[plane]);
-                        //Recon[make_pair(min(ii, opposide[pl]), max(ii, opposide[pl]))] = 1;
-                        //break;
                     }
                     if ((f1 > 0 && f3 < 0) || (f1 < 0 && f3 > 0))
                     {
                         cuted = 1; //cuttedFp.push_back(opposide[plane]);
-                        //Recon[make_pair(min(ii, opposide[pl]), max(ii, opposide[pl]))] = 1;
-                        //break;
                     }
-
                 }
 
                 if (cuted)
@@ -614,81 +441,23 @@ void Comput_RPD(string modelpath,string modelName)
                     thisF.push_back(VersPoisson[FacesPoisson[f].z()]);
                     CuttedF.push_back(thisF);
 
-                    //cout << "type " << PointType[thisF[0]] << " " << PointType[thisF[1]] << " " << PointType[thisF[2]] << "\n";
                     aliveF.push_back(1);
-                    //CutConnect[f].push_back(ii);
                 }
-
-                //if (vp1 == 0)
-                //{
-                //    insidePoints++;
-                //}
-                //if (vp2 == 0)
-                //{
-                //    insidePoints++;
-                //}
-                //if (vp3 == 0)
-                //{
-                //    insidePoints++;
-                //}
-                ////cout << insidePoints << endl;
-
-                //if (insidePoints == 3)
-                //{
-                //    // in cell
-                //    insideF.push_back(f);
-                //}
-                //if (insidePoints == 0)
-                //{
-                //    // out of cell
-
-                //}
-                //if (insidePoints >0&&insidePoints<3)
-                //{
-                //    // cut by cell
-                //    vector<Eigen::Vector3d> thisF;
-                //    thisF.push_back(VersPoisson[FacesPoisson[f].x()]);
-                //    thisF.push_back(VersPoisson[FacesPoisson[f].y()]);
-                //    thisF.push_back(VersPoisson[FacesPoisson[f].z()]);
-                //    CuttedF.push_back(thisF);
-                //    //cout << "type " << PointType[thisF[0]] << " " << PointType[thisF[1]] << " " << PointType[thisF[2]] << "\n";
-                //    aliveF.push_back(1);
-                //    CutConnect[f].push_back(ii);
-                //}
-
-
             }
-
-
 
             for (int j = 0; j < CuttedF.size(); j++)
             {
-                //cout << j << " " << CuttedF.size() << endl;
                 auto f = CuttedF[j];
                 if (!aliveF[j])
                     continue;
 
                 vector<Eigen::Vector3d> newF;
                 bool cgd = 0;
-                //newF.push_back(f[0]);
-                //cout << "f " << f.size() << endl;
-                //cout << "type " << PointType[f[0]] << " " << PointType[f[1]] << " " << PointType[f[2]] << "\n";
-
-
-
-
-
 
                 bool fd = 0;
                 int fdp = 0;
                 for (int pl = 0; pl < PC->Planes.size(); pl++)
                 {
-
-                    /*if (!FlagPlane[pl])
-                    {
-                        continue;
-                    }*/
-
                     auto plane = PC->Planes[pl];
                     if (fd)
                         break;
@@ -725,21 +494,12 @@ void Comput_RPD(string modelpath,string modelName)
                         }
                         if ((f1 > 0 && f2 < 0) || (f1 < 0 && f2 > 0))
                         {
-                            //cout << f1 << " " << f2 << endl;
-
                             Eigen::Vector3d NewPoint;
                             f1 = fabs(f1); f2 = fabs(f2);
                             NewPoint.x() = P1.x() + (P2.x() - P1.x()) * (f1 / (f1 + f2));
                             NewPoint.y() = P1.y() + (P2.y() - P1.y()) * (f1 / (f1 + f2));
                             NewPoint.z() = P1.z() + (P2.z() - P1.z()) * (f1 / (f1 + f2));
-                            /*if (PointType.find(NewPoint) != PointType.end())
-                            {
-                                newF_tmp.push_back(P1);
-                                continue;
-                            }*/
                             MyPoint PP1(NewPoint);
-
-
                             newF_tmp.push_back(P1);
                             newF_tmp.push_back(NewPoint);
 
@@ -759,12 +519,6 @@ void Comput_RPD(string modelpath,string modelName)
                     }
                 }
 
-
-
-
-
-
-
                 if (fd == 0)
                 {
                     bool isInside = 0;// for test
@@ -781,15 +535,10 @@ void Comput_RPD(string modelpath,string modelName)
                         P1 = f[i];
                         for (int pl = 0; pl < PC->Planes.size(); pl++)
                         {
-                            /*if (!FlagPlane[pl])
-                            {
-                                continue;
-                            }*/
                             auto plane = PC->Planes[pl];
 
                             double f1;
                             f1 = plane.a() * P1.x() + plane.b() * P1.y() + plane.c() * P1.z() + plane.d();
-                            //maxF = max(maxF, f1);
                             if (f1 > maxFo)
                             {
                                 maxFo = f1;
@@ -839,78 +588,6 @@ void Comput_RPD(string modelpath,string modelName)
                             continue;
                         }
 
-
-                        /*for (int i = 0; i < Newps.size(); i++)
-                        {
-                            Eigen::Vector3d P1, P2;
-                            P1 = Newps[i];
-                            if (i == Newps.size() - 1)
-                            {
-                                P2 = Newps[0];
-                            }
-                            else
-                            {
-                                P2 = Newps[i + 1];
-                            }
-                            if (P1.x() > P2.x())
-                            {
-                                RVD[make_pair(P1, P2)] = 1;
-                            }
-                            else
-                            {
-                                RVD[make_pair(P2, P1)] = 1;
-                            }
-
-                        }
-                        for (int i = 0; i < f.size(); i++)
-                        {
-                            if (PointType[f[i]] == 0)
-                            {
-                                Eigen::Vector3d P1, P2;
-
-                                int k = i;
-                                while (true)
-                                {
-                                    k++;
-                                    if (k == f.size())
-                                    {
-                                        k = 0;
-                                    }
-                                    if (Nps[k] == 1)
-                                    {
-                                        P1 = f[i];
-                                        break;
-                                    }
-                                }
-                                k = i;
-                                while (true)
-                                {
-                                    k--;
-                                    if (k == -1)
-                                    {
-                                        k = f.size()-1;
-                                    }
-                                    if (Nps[k] == 1)
-                                    {
-                                        P2 = f[i];
-                                        break;
-                                    }
-                                }
-                                if (P1.x() > P2.x())
-                                {
-                                    RVD[make_pair(P1, P2)] = 0;
-                                }
-                                else
-                                {
-                                    RVD[make_pair(P2, P1)] = 0;
-                                }
-
-                            }
-                        }*/
-
-
-
-
                         vector<Eigen::Vector3d> Drawedpoints;
                         for (int i = 0; i < f.size(); i++)
                         {
@@ -941,10 +618,6 @@ void Comput_RPD(string modelpath,string modelName)
                             double maxF = -99999999.0;
                             for (int pl = 0; pl < PC->Planes.size(); pl++)
                             {
-                                /*if (!FlagPlane[pl])
-                                {
-                                    continue;
-                                }*/
                                 auto plane = PC->Planes[pl];
 
                                 double f1, f2;
@@ -962,23 +635,17 @@ void Comput_RPD(string modelpath,string modelName)
                                 doublecheck = 1;
                             }
 
-
-
-                            //if (PointType[P1] != 0&& PointType[P2] != 0)
                             if (V1 && V2 && !doublecheck)
                             {
                                 Drawedpoints.push_back(P1);
                                 Drawedpoints.push_back(P2);
 
-
                                 MyPoint p1(P1), p2(P2);
                                 RVDpoints[ii].insert(p1);
                                 RVDpoints[ii].insert(p2);
 
-
                                 if (p2 < p1)
                                 {
-
                                     if (RVD.find(make_pair(p1, p2)) == RVD.end())
                                     {
                                         RVD[make_pair(p1, p2)] = ii;
@@ -986,7 +653,6 @@ void Comput_RPD(string modelpath,string modelName)
                                     else
                                     {
                                         int lst = RVD[make_pair(p1, p2)];
-                                        //Recon[make_pair(min(lst, ii), max(lst, ii))] = 1;
                                     }
 
 
@@ -1000,10 +666,7 @@ void Comput_RPD(string modelpath,string modelName)
                                     else
                                     {
                                         int lst = RVD[make_pair(p2, p1)];
-                                        //Recon[make_pair(min(lst, ii), max(lst, ii))] = 1;
                                     }
-
-                                    //RVD[make_pair(P2, P1)] = 1;
                                 }
                             }
                         }
@@ -1014,10 +677,6 @@ void Comput_RPD(string modelpath,string modelName)
                             double maxF = -999999.0;
                             for (int pl = 0; pl < PC->Planes.size(); pl++)
                             {
-                                /*if (!FlagPlane[pl])
-                                {
-                                    continue;
-                                }*/
                                 auto plane = PC->Planes[pl];
                                 double f1;
                                 f1 = plane.a() * P1.x() + plane.b() * P1.y() + plane.c() * P1.z() + plane.d();
@@ -1034,7 +693,6 @@ void Comput_RPD(string modelpath,string modelName)
                                     }
                                 }
                             }
-
                         }
                         for (auto mp : cnt)
                         {
@@ -1043,61 +701,34 @@ void Comput_RPD(string modelpath,string modelName)
                                 Recon[make_pair(min(mp.first, ii), max(mp.first, ii))] = 1;
                             }
                         }
-
-
-
-
                     }
                     else
                     {
                         aliveF[j] = 0;
-
                     }
                 }
                 else
                 {
-                    // if(fd)
                     vector<Eigen::Vector3d> newF1, newF2;
                     bool fdd = 0;
-                    //cout << "NewF " << newF.size() << endl;
                     for (int i = 0; i < newF.size(); i++)
                     {
-                        // cout << "type " << PointType[newF[i]] << "\n";
                         if (PointType[newF[i]] == -1)
                         {
                             PointType[newF[i]] = -2;
                             if (fdd == 0)
                             {
                                 newF1.push_back(newF[i]); newF2.push_back(newF[i]);
-                                //cout << i << "  111\n"; //cout << i << "  222\n";
                                 fdd = 1;
-
                                 continue;
                             }
                             else
                             {
                                 newF1.push_back(newF[i]); //cout << i << "  111\n";
                                 newF2.push_back(newF[i]); //cout << i << "  222\n";
-
                                 fdd = 0;
                                 continue;
                             }
-
-
-
-                            /*Eigen::Vector3d P1 = newF[i];
-                            double maxF = -99999999.0;
-                            for (auto plane : PC->Planes)
-                            {
-                                double f1, f2;
-                                f1 = plane.a() * P1.x() + plane.b() * P1.y() + plane.c() * P1.z() + plane.d();
-                                maxF = max(maxF, f1);
-
-                            }
-                            if (fabs(maxF) < 0.0001)
-                            {
-
-                            }*/
                         }
                         if (fdd == 0)
                         {
@@ -1113,22 +744,8 @@ void Comput_RPD(string modelpath,string modelName)
                     aliveF.push_back(1);
                     CuttedF.push_back(newF1);
                     CuttedF.push_back(newF2);
-
-                    //cuttedFp.push_back(cuttedFp[j]);
-                    //cuttedFp.push_back(cuttedFp[j]);
-
-
-
-
-                    //return 0;
                 }
-
-
-
-
             }
-
-
 
             for (auto rvdp : RVDpoints[ii])
             {
@@ -1159,38 +776,23 @@ void Comput_RPD(string modelpath,string modelName)
 
                             MyFace ff(aa, bb, cc);
                             NewFaces[ff] = ii;
-
                         }
-
-
-
                     }
-
                 }
-
             }
-
-
-
-
-
             //break;
         }
-
 
 
         map<int, bool> ifInsideOtherRVD;
         for (int ii = 0; ii < n; ii++)
         {
-            /*if (Repeat[ii] != -1)
-                continue;*/
             auto PC = PCs[ii];
 
             ifInsideOtherRVD[ii] = 0;
             bool flagRvdp = 0;
             for (auto rvdp : RVDpoints[ii])
             {
-
                 bool flagii = 0;
                 for (int jj = 0; jj < neighboor[ii].size(); jj++)
                 {
@@ -1234,17 +836,11 @@ void Comput_RPD(string modelpath,string modelName)
             {
                 ifInsideOtherRVD[ii] = 1;
             }
-
-
         }
 
 
         map<MyPoint, int> degree;
-        /*for (auto p : RvdPoints2Face)
-        {
-            degree[p.first] = 0;
-        }*/
-        ofstream outRVD(filePath + "\\RVD_" + modelName + ".obj");
+        ofstream outRVD(outputPath + "/RVD_" + modelName + ".obj");
 
         outRVD.precision(15);
         outRVD.flags(ios::left | ios::fixed);
@@ -1254,12 +850,9 @@ void Comput_RPD(string modelpath,string modelName)
         int pid = 0;
         for (auto mp : RVD)
         {
-            //if (mp.second == 1)
             {
                 MyPoint P1 = mp.first.first;
                 MyPoint P2 = mp.first.second;
-
-                //MyPoint PP1(P1), PP2(P2);
 
                 if (Point2IDD.find(P1) == Point2IDD.end())
                 {
@@ -1291,34 +884,7 @@ void Comput_RPD(string modelpath,string modelName)
             }
         }
 
-
-
-
-        //memset(h, -1, sizeof(h));
-        //memset(nxt, -1, sizeof(h));
-
-        //ofstream outl(filePath + modelName + "\\PointCloudConnection.obj");
-        //outl.precision(15);
-        //outl.flags(ios::left | ios::fixed);
-        //outl.fill('0');
-
-        //for (auto p : VersPC_ori)
-        //{
-        //    /*if (Repeat[ii] != -1)
-        //        continue;*/
-        //    outl << "v " << p.transpose() << endl;
-        //}
-
-        //for (auto mp : Recon)
-        //{
-
-        //    add(mp.first.first, mp.first.second);
-        //    add(mp.first.second, mp.first.first);
-
-
-        //    outl << "l " << mp.first.first + 1 << " " << mp.first.second + 1 << "\n";
-        //}
-        ofstream outRemesh(filePath + "\\Remesh_" + modelName + ".obj");
+        ofstream outRemesh(outputPath + "/Remesh_" + modelName + ".obj");
         outRemesh.precision(15);
         outRemesh.flags(ios::left | ios::fixed);
         outRemesh.fill('0');
@@ -1326,14 +892,10 @@ void Comput_RPD(string modelpath,string modelName)
 
         for (auto p : VersPC_ori)
         {
-            /*if (Repeat[ii] != -1)
-                continue;*/
             outRemesh << "v " << p.transpose() << endl;
         }
 
         map<pair<int, int>, int> DegreeOfEdge;
-
-
 
         cout << NewFaces.size() << endl;
         for (auto f : NewFaces)
@@ -1364,16 +926,10 @@ void Comput_RPD(string modelpath,string modelName)
             DegreeOfEdge[make_pair(min(aa, bb), max(aa, bb))]++;
             DegreeOfEdge[make_pair(min(aa, cc), max(aa, cc))]++;
             DegreeOfEdge[make_pair(min(cc, bb), max(cc, bb))]++;
-
-
-
-
-            //outRemesh << "f " << f.first.p.x() + 1 << " " << f.first.p.y() + 1 << " " << f.first.p.z() + 1 << "\n";
         }
 
         while (true)
         {
-
             bool vvv = 0;
             for (auto f : NewFaces)
             {
@@ -1385,7 +941,6 @@ void Comput_RPD(string modelpath,string modelName)
                 {
                     continue;
                 }
-
 
                 int aa, bb, cc;
                 aa = f.first.p.x();
@@ -1433,7 +988,6 @@ void Comput_RPD(string modelpath,string modelName)
             FaceFlag.push_back(0);
             RemeshFs.push_back(Eigen::Vector3i(f.first.p.x(), f.first.p.y(), f.first.p.z()));
             fid++;
-
             //    outRemesh << "f " << f.first.p.x() + 1 << " " << f.first.p.y() + 1 << " " << f.first.p.z() + 1 << "\n";
         }
 
@@ -1608,19 +1162,7 @@ void Comput_RPD(string modelpath,string modelName)
                     }
                 }
             }
-
-
-
-
-
         }
-
-        /*for (auto f : RemeshFs)
-        {
-            outRemesh << "f " << f.x() + 1 << " " << f.y() + 1 << " " << f.z() + 1 << endl;
-
-        }*/
-
 
         // delete nonf
         map<pair<int, int>, int> EdgeCnt;
@@ -1662,20 +1204,6 @@ void Comput_RPD(string modelpath,string modelName)
             int aa = f.x();
             int bb = f.y();
             int cc = f.z();
-            /*if (EdgeCnt[make_pair(min(aa, bb), max(aa, bb))] > 2 && (EdgeCnt[make_pair(min(cc, bb), max(cc, bb))]==1 || EdgeCnt[make_pair(min(aa, cc), max(aa, cc))]==1))
-            {
-                continue;
-            }
-
-            if (EdgeCnt[make_pair(min(cc, bb), max(cc, bb))] > 2 && (EdgeCnt[make_pair(min(aa, bb), max(aa, bb))] == 1 || EdgeCnt[make_pair(min(aa, cc), max(aa, cc))] == 1))
-            {
-                continue;
-            }
-
-            if (EdgeCnt[make_pair(min(aa, cc), max(aa, cc))] > 2 && (EdgeCnt[make_pair(min(cc, bb), max(cc, bb))] == 1 || EdgeCnt[make_pair(min(aa, bb), max(aa, bb))] == 1))
-            {
-                continue;
-            }*/
 
             if (EdgeCnt[make_pair(min(aa, bb), max(aa, bb))] == 1)
             {
@@ -1692,11 +1220,10 @@ void Comput_RPD(string modelpath,string modelName)
                 continue;
             }
 
-
             outRemesh << "f " << f.x() + 1 << " " << f.y() + 1 << " " << f.z() + 1 << endl;
         }
 
-        ofstream outEdge(filePath +  "\\Edges_" + modelName + ".obj");
+        ofstream outEdge(outputPath +  "/Edges_" + modelName + ".obj");
         outEdge.precision(15);
         outEdge.flags(ios::left | ios::fixed);
         outEdge.fill('0');
@@ -1704,8 +1231,6 @@ void Comput_RPD(string modelpath,string modelName)
         set<pair<int, int>> edges;
         for (auto p : VersPC_ori)
         {
-            /*if (Repeat[ii] != -1)
-                continue;*/
             outEdge << "v " << p.transpose() << endl;
         }
         for (auto f : RemeshFs)
@@ -1721,7 +1246,7 @@ void Comput_RPD(string modelpath,string modelName)
         }
         outEdge.close();
 
-        ofstream outFeatureLine(filePath + "\\FeatureLine_" + modelName + ".obj");
+        ofstream outFeatureLine(outputPath + "/FeatureLine_" + modelName + ".obj");
         outFeatureLine.precision(15);
         outFeatureLine.flags(ios::left | ios::fixed);
         outFeatureLine.fill('0');
@@ -1729,20 +1254,11 @@ void Comput_RPD(string modelpath,string modelName)
 
         for (auto p : VersPC_ori)
         {
-            /*if (Repeat[ii] != -1)
-                continue;*/
             outFeatureLine << "v " << p.transpose() << endl;
         }
 
-        /*for (auto e : edges)
-        {
-            if (IsFeature[e.first] && IsFeature[e.second])
-                outFeatureLine << "l " << e.first + 1 << " " << e.second + 1 << "\n";
-        }*/
-        
-
         MyHalfEdgeModel FinalModel;
-        FinalModel.ReadObjFile((filePath +"\\Remesh_" + modelName + ".obj").c_str());
+        FinalModel.ReadObjFile((filePath +"/Remesh_" + modelName + ".obj").c_str());
         auto Fedges = FinalModel.GetEdges();
         auto Ffaces = FinalModel.GetFaces();
         auto Fvecs = FinalModel.GetVertices();
@@ -1765,10 +1281,6 @@ void Comput_RPD(string modelpath,string modelName)
 				Nf2 = (v2 - v1).cross(v3 - v1).normalized();
 				//compute angle between f1 and f2
 				double angle = acos(Nf1.dot(Nf2));
-               /* if (angle > 3.1415926535 / 2)
-                {
-					angle = 3.1415926535 - angle;
-                }*/
 				// angle to drgee
 				angle = angle * 180 / 3.1415926535;
                 if (angle > 40&& angle < 140)
@@ -1780,25 +1292,9 @@ void Comput_RPD(string modelpath,string modelName)
         }
         outFeatureLine.close();
         // output a single feature line model .
-
-
-
-
-
-
-
     }
 
-
-
-
-
     std::cout << "Hello World!\n";
-
-
-
-
-
 }
 
 
