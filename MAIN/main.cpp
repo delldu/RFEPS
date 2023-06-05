@@ -394,6 +394,8 @@ void Test(string modelpath, string model, bool ifdenoise)
 		double epsf = 0;
 		double epsx = 0;
 		ae_int_t maxits = 0.000001;
+
+		// Box and linearly constrained optimization ?
 		alglib::minbleiccreate(x0, state);
 		alglib::minbleicsetlc(state, c, ct);
 		alglib::minbleicsetbc(state, bndl, bndu);
@@ -438,15 +440,13 @@ void Test(string modelpath, string model, bool ifdenoise)
 	// part2 normal
 	//KNNSC
 	auto neighboor_M = neighboor;
-	cout << "ASDA\n";
 	for (int i = 0; i < r; i++) {
 		int k = neighboor[i].size();
 		if (k < 5)
 			continue;
 
 		if (R3[i] == 1)
-            continue;
-
+		    continue;
 
 		int pid = 1;
 		k = neighboor_M[i].size();
@@ -488,7 +488,6 @@ void Test(string modelpath, string model, bool ifdenoise)
 			}
 		}
 	} // Update neighboor_M ?
-	cout << "ASDA\n";
 
 	map<int, Eigen::Vector3d> Nall_new;
 	for (int iter = 0; iter < r; iter++) {
@@ -670,7 +669,6 @@ void Test(string modelpath, string model, bool ifdenoise)
 			flag3[iter] = 1;
 			continue;
 		}
-
 	}
 
 
@@ -730,6 +728,7 @@ void Test(string modelpath, string model, bool ifdenoise)
 		double epsf = 0;
 		double epsx = 0;
 		ae_int_t maxits = 0;
+		// Box and linearly constrained optimization ?
 		alglib::minbleiccreate(x0, state);
 		alglib::minbleicsetscale(state, s0);
 		alglib::minbleicsetcond(state, epsg, epsf, epsx, maxits);
@@ -740,10 +739,12 @@ void Test(string modelpath, string model, bool ifdenoise)
 		minbleicreport rep2;
 		alglib::minbleicoptimize(state, fop_z_lambda);
 		alglib::minbleicresults(state, x0, rep2);
+
 		double mn = 0;
 		real_1d_array G_tmp;
 		G_tmp.setlength(3);
 		fop_z_lambda(x0, mn, G_tmp, nullptr);
+
 		double dis = (Vall[iter] - Eigen::Vector3d(x0[0], x0[1], x0[2])).norm();
 		if (dis > 0.0001) {
 			NewPoints[iter] = Eigen::Vector3d(x0[0], x0[1], x0[2]);
@@ -761,8 +762,8 @@ void Test(string modelpath, string model, bool ifdenoise)
 			flag3[np.first] = 1;
 	}
 
-    std::cout << "Test: Saving " << test_output + "/FinalPointCloud1_" + model + ".xyz" << " ..." << std::endl;
-	out.open(test_output + "/FinalPointCloud1_" + model + ".xyz");
+    std::cout << "Test: Saving " << test_output + "/FinalPointCloud_" + model + ".xyz" << " ..." << std::endl;
+	out.open(test_output + "/FinalPointCloud_" + model + ".xyz");
 	vector<bool> flag2(r, 0);
 	for (auto np : NewPoints) {
 		if (flag3[np.first])
@@ -778,7 +779,6 @@ void Test(string modelpath, string model, bool ifdenoise)
 		if(!flag2[i])
 			out << Vall[i].transpose() << " " << Nall_new[i].transpose() << endl;
 	}
-
 	out.close();
 
     std::cout << "Test: Saving " << test_output + "/FeaturePointsNum_" + model + ".txt" << " ..." << std::endl;

@@ -36,7 +36,7 @@ class DisjSet
 {
 private:
 	std::vector<int> parent;
-	std::vector<int> rank; // ÷»
+	std::vector<int> rank;
 
 public:
 	DisjSet(int max_size) : parent(std::vector<int>(max_size)),
@@ -73,23 +73,21 @@ void Comput_rnn(string modelpath, string modelname)
 	string rnn_output = ".";
 
 	vector<Eigen::Vector3d> VersPC_ori;
-	vector<string> models;
 	vector<double> Weight;
 
-	vector<int> Repeat;
 	vector<vector<int>> neighboor;
 
 	MyPointCloudModel PCmodel;
-    std::cout << "Comput_rnn: Loading " << rnn_output + "/FinalPointCloud1_"+ modelname + ".xyz" << " ..." << std::endl;
-	PCmodel.ReadXYZFile((rnn_output + "/FinalPointCloud1_"+ modelname + ".xyz").c_str(), true);
-	int FeatureN = -1;
-	double radis;
+    std::cout << "Comput_rnn: Loading " << rnn_output + "/FinalPointCloud_"+ modelname + ".xyz" << " ..." << std::endl;
+	PCmodel.ReadXYZFile((rnn_output + "/FinalPointCloud_"+ modelname + ".xyz").c_str(), true);
 
+	int FeatureN = -1;
     std::cout << "Comput_rnn: Loading " << rnn_output + "/FeaturePointsNum_" + modelname + ".txt" << " ..." << std::endl;
 	ifstream inFnum(rnn_output + "/FeaturePointsNum_" + modelname + ".txt");
 	inFnum >> FeatureN;
 	inFnum.close();
 
+	double radis;
     std::cout << "Comput_rnn: Loading " << rnn_output + "/radis_" + modelname + ".txt" << " ..." << std::endl;
 	ifstream inRnum(rnn_output + "/radis_" + modelname + ".txt");
 	inRnum >> radis;
@@ -101,19 +99,19 @@ void Comput_rnn(string modelpath, string modelname)
     std::cout << "Comput_rnn: Loading " << rnn_output + "/model_poisson_" + modelname + ".obj" << " ..." << std::endl;
 	PoissonModel->ReadObjFile((rnn_output + "/model_poisson_" + modelname + ".obj").c_str());
 
-	Polyhedron polyhedron;
-    std::cout << "Comput_rnn: Loading " << rnn_output + "/model_poisson_" + modelname + ".off" << " ..." << std::endl;
-	std::ifstream input(rnn_output + "/model_poisson_" + modelname + ".off");
+	// Polyhedron polyhedron;
+    // std::cout << "Comput_rnn: Loading " << rnn_output + "/model_poisson_" + modelname + ".off" << " ..." << std::endl;
+	// std::ifstream input(rnn_output + "/model_poisson_" + modelname + ".off");
 
 	VersPC_ori = PCmodel.GetVertices();
 
-	input >> polyhedron;
-	Tree tree(faces(polyhedron).first, faces(polyhedron).second, polyhedron);
+	// input >> polyhedron;
+	// Tree tree(faces(polyhedron).first, faces(polyhedron).second, polyhedron);
 	vector<Eigen::Vector3d> VersPC;
 	for (int i = 0; i < VersPC_ori.size(); i++) {
-		Point_T query(VersPC_ori[i].x(), VersPC_ori[i].y(), VersPC_ori[i].z());
-		Point_T closest = tree.closest_point(query);
-		Eigen::Vector3d NewP(closest.x(), closest.y(), closest.z());
+		// Point_T query(VersPC_ori[i].x(), VersPC_ori[i].y(), VersPC_ori[i].z());
+		// Point_T closest = tree.closest_point(query);
+		// Eigen::Vector3d NewP(closest.x(), closest.y(), closest.z());
 		VersPC.push_back(VersPC_ori[i]);
 	}
 
@@ -151,8 +149,6 @@ void Comput_rnn(string modelpath, string modelname)
 	}
 
 	DisjSet bcj(VersPC.size());
-	for (int i = 0; i < VersPC.size(); i++)
-		Repeat.push_back(i);
 
 	for (int i = 0; i < FeatureN; i++) {
 		for (auto pp : neighboor[i]) {

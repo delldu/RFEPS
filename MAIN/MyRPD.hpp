@@ -70,6 +70,7 @@ struct MyPoint
 
         return (p.x() < a.p.x());
     }
+
     bool operator==(const MyPoint& a) const
     {
         if ((p.x() - a.p.x()) < 0.00000000001 && (p.x() - a.p.x()) > -0.00000000001) {
@@ -77,7 +78,6 @@ struct MyPoint
                 if ((p.z() - a.p.z()) < 0.00000000001 && (p.z() - a.p.z()) > -0.00000000001)
                     return 1;
             }
-
         }
         return 0;
     }
@@ -95,7 +95,7 @@ struct MyFace
         p.y() = b;
         p.z() = c;
     }
-    Eigen::Vector3i p;
+
     bool operator<(const MyFace& a) const
     {
         if (p.x() == a.p.x()) {
@@ -105,6 +105,8 @@ struct MyFace
         }
         return p.x() > a.p.x();
     }
+
+    Eigen::Vector3i p;
 };
 
 
@@ -134,8 +136,8 @@ void Comput_RPD(string modelpath, string modelName)
 
     MyHalfEdgeModel* PoissonModel = new MyHalfEdgeModel();
     PoissonModel->ReadObjFile((rpd_output + "/model_poisson_"+ modelName +".obj").c_str());
-    double radis = 0;
 
+    double radis = 0;
     std::cout << "Comput_RPD: Loading " << rpd_output  + "/radis_" + modelName + ".txt" << " ..." << std::endl;
     ifstream inRnum(rpd_output  + "/radis_" + modelName + ".txt");
     inRnum >> radis;
@@ -147,12 +149,15 @@ void Comput_RPD(string modelpath, string modelName)
 
     std::cout << "Comput_RPD: Loading " << rpd_output  + "/FeaturePointNum_" + modelName + ".txt" << " ..." << std::endl;
     ifstream inFnum(rpd_output  + "/FeaturePointNum_" + modelName + ".txt");
+    // ==> IsFeature
 
     std::cout << "Comput_RPD: Loading " << rpd_output  + "/PoissonPoints_qc_" + modelName + ".xyz" << " ..." << std::endl;
     ifstream inNewPs(rpd_output  + "/PoissonPoints_qc_" + modelName + ".xyz");
+    // ==> VersPC
 
     std::cout << "Comput_RPD: Loading " << rpd_output  + "/OriPoints_qc_" + modelName + ".xyz" << " ..." << std::endl;
     ifstream inOriPs(rpd_output  + "/OriPoints_qc_" + modelName + ".xyz");
+    // ==> VersPC_ori, Normal_ori
 
     int n = 0;
     double x11, y11, z11;
@@ -160,17 +165,16 @@ void Comput_RPD(string modelpath, string modelName)
         n++;
         bool isf;
         inFnum >> isf;
+
         IsFeature.push_back(isf);
         Eigen::Vector3d NewP(x11, y11, z11);
         VersPC.push_back(NewP);
 
         inOriPs >> x11 >> y11 >> z11;
-
         Eigen::Vector3d NewP2(x11, y11, z11);
         VersPC_ori.push_back(NewP2);
 
         inOriPs >> x11 >> y11 >> z11;
-
         Eigen::Vector3d normal(x11, y11, z11);
         Normal_ori.push_back(normal);
     }
@@ -279,14 +283,13 @@ void Comput_RPD(string modelpath, string modelName)
             }
         }
 
-        vector<int> insideF;
         vector<vector<Eigen::Vector3d>> CuttedF;
         vector<bool> aliveF;
 
         map<MyPoint, int> PointType;
         for (auto f : CloseFaces) {
             bool cuted = 0;
-            int insidePoints = 0;
+
             auto P1 = VersPoisson[FacesPoisson[f].x()];
             auto P2 = VersPoisson[FacesPoisson[f].y()];
             auto P3 = VersPoisson[FacesPoisson[f].z()];
@@ -346,10 +349,8 @@ void Comput_RPD(string modelpath, string modelName)
                 continue;
 
             vector<Eigen::Vector3d> newF;
-            bool cgd = 0;
 
             bool fd = 0;
-            int fdp = 0;
             for (int pl = 0; pl < PC->Planes.size(); pl++) {
                 auto plane = PC->Planes[pl];
                 if (fd)
@@ -396,7 +397,6 @@ void Comput_RPD(string modelpath, string modelName)
                 }
                 if (fd) {
                     newF = newF_tmp;
-                    fdp = opposide[pl];
                 }
             }
 
@@ -527,16 +527,16 @@ void Comput_RPD(string modelpath, string modelName)
                             fdd = 1;
                             continue;
                         } else {
-                            newF1.push_back(newF[i]); //cout << i << "  111\n";
-                            newF2.push_back(newF[i]); //cout << i << "  222\n";
+                            newF1.push_back(newF[i]);
+                            newF2.push_back(newF[i]);
                             fdd = 0;
                             continue;
                         }
                     }
                     if (fdd == 0) {
-                        newF1.push_back(newF[i]); //cout << i << "  111\n";
+                        newF1.push_back(newF[i]); 
                     } else {
-                        newF2.push_back(newF[i]); //cout << i << "  222\n";
+                        newF2.push_back(newF[i]);
                     }
                 }
                 aliveF[j] = 0;
@@ -624,8 +624,6 @@ void Comput_RPD(string modelpath, string modelName)
     }
 
 
-    map<MyPoint, int> degree;
-
     std::cout << "Comput_RPD: Saving " << rpd_output + "/RVD_" + modelName + ".obj" << " ..." << std::endl;
     ofstream outRVD(rpd_output + "/RVD_" + modelName + ".obj");
     outRVD.precision(15);
@@ -649,15 +647,6 @@ void Comput_RPD(string modelpath, string modelName)
             outRVD << "v " << P2.p.transpose() << "\n";
         }
         outRVD << "l " << Point2IDD[P1] << " " << Point2IDD[P2] << "\n";
-
-        if (degree.find(P1) == degree.end())
-            degree[P1] = 0;
-
-        if (degree.find(P2) == degree.end())
-            degree[P2] = 0;
-
-        degree[P1]++;
-        degree[P2]++;
     }
     outRVD.close();
 
@@ -952,7 +941,7 @@ void Comput_RPD(string modelpath, string modelName)
         outFeatureLine << "v " << p.transpose() << endl;
     }
 
-    MyHalfEdgeModel FinalModel;
+    MyHalfEdgeModel FinalModel; // Final Model !!!
     std::cout << "Comput_RPD: Loading " << rpd_output +"/Remesh_" + modelName + ".obj" << " ..." << std::endl;
     FinalModel.ReadObjFile((rpd_output +"/Remesh_" + modelName + ".obj").c_str());
 
@@ -964,28 +953,29 @@ void Comput_RPD(string modelpath, string modelName)
             auto f1 = e.indexOfFrontFace;
             auto f2 = Fedges[e.indexOfReverseEdge].indexOfFrontFace;
             Eigen::Vector3d Nf1, Nf2;
-			//compute normal of f1
-			auto v1 = Fvecs[Ffaces[f1].x()];
-			auto v2 = Fvecs[Ffaces[f1].y()];
-			auto v3 = Fvecs[Ffaces[f1].z()];
-			Nf1 = (v2 - v1).cross(v3 - v1).normalized();
-			//compute normal of f2
-			v1 = Fvecs[Ffaces[f2].x()];
-			v2 = Fvecs[Ffaces[f2].y()];
-			v3 = Fvecs[Ffaces[f2].z()];
-			Nf2 = (v2 - v1).cross(v3 - v1).normalized();
-			//compute angle between f1 and f2
-			double angle = acos(Nf1.dot(Nf2));
-			// angle to drgee
-			angle = angle * 180 / 3.1415926535;
-            if (angle > 40&& angle < 140) {
-				outFeatureLine << "l " << e.leftVert + 1 << " " << e.rightVert + 1 << "\n";
-			}
-            
+
+            //compute normal of f1
+            auto v1 = Fvecs[Ffaces[f1].x()];
+            auto v2 = Fvecs[Ffaces[f1].y()];
+            auto v3 = Fvecs[Ffaces[f1].z()];
+            Nf1 = (v2 - v1).cross(v3 - v1).normalized();
+
+            //compute normal of f2
+            v1 = Fvecs[Ffaces[f2].x()];
+            v2 = Fvecs[Ffaces[f2].y()];
+            v3 = Fvecs[Ffaces[f2].z()];
+            Nf2 = (v2 - v1).cross(v3 - v1).normalized();
+
+            //compute angle between f1 and f2
+            double angle = acos(Nf1.dot(Nf2));
+
+            // angle to drgee
+            angle = angle * 180 / 3.1415926535;
+            if (angle > 40 && angle < 140) {
+                outFeatureLine << "l " << e.leftVert + 1 << " " << e.rightVert + 1 << "\n";
+            }
         }
     }
     outFeatureLine.close();
     // output a single feature line model .
-
-    std::cout << "Hello World!\n";
 }
